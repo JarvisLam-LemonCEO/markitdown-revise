@@ -34,80 +34,39 @@ Markdown-formatted text, and understand it well. As a side benefit, Markdown con
 are also highly token-efficient.
 
 ## Prerequisites
+MarkItDown requires Python 3.10 or higher. It is recommended to use a virtual environment to avoid dependency conflicts.
 
-This modified build targets Python 3.14. On macOS, the included installer manages the Python virtual environment automatically, so users do **not** need to create, activate, move, or maintain `.venv` themselves.
+With the standard Python installation, you can create and activate a virtual environment using the following commands:
+
+```bash
+python -m venv .venv
+source .venv/bin/activate
+```
+
+If using `uv`, you can create a virtual environment with:
+
+```bash
+uv venv --python=3.12 .venv
+source .venv/bin/activate
+# NOTE: Be sure to use 'uv pip install' rather than just 'pip install' to install packages in this virtual environment
+```
+
+If you are using Anaconda, you can create a virtual environment with:
+
+```bash
+conda create -n markitdown python=3.12
+conda activate markitdown
+```
 
 ## Installation
 
-### Recommended macOS installation — automatic global command
-
-For normal use on macOS, use the included installer instead of creating a virtual environment manually.
-
-1. Extract or clone this repository.
-2. In Finder, double-click **`Install MarkItDown.command`**.
-
-Or run it from Terminal:
+To install MarkItDown, use pip: `pip install 'markitdown[all]'`. Alternatively, you can install it from the source:
 
 ```bash
-./"Install MarkItDown.command"
-```
-
-The installer automatically:
-
-- finds Python 3.14;
-- installs Python 3.14 with Homebrew if Python 3.14 is missing and Homebrew is available;
-- creates a private environment at `~/.local/share/markitdown-python314/venv`;
-- installs this modified local MarkItDown package with all optional converters;
-- creates a global `markitdown` launcher in a writable directory already on `PATH` when possible;
-- otherwise creates `~/.local/bin/markitdown` and configures zsh to include it on `PATH`;
-- runs `markitdown --help` as a self-test.
-
-No manual `source .venv/bin/activate` step is required.
-
-After installation, open a new Terminal window if the installer says the PATH was newly configured. Then use MarkItDown from any directory:
-
-```bash
-markitdown ~/Downloads/file.pdf -o ~/Downloads/read.md
-```
-
-The PDF, the output file, and the MarkItDown source repository can all be in different folders.
-
-### Moving or deleting the source folder after installation
-
-The automatic installer performs a normal package installation rather than an editable `pip install -e` installation. Therefore the installed `markitdown` command does not point back to the original repository folder.
-
-You can move the repository after installation without breaking the global command. You can also delete the extracted source folder after installation if you do not need it for development.
-
-To install a newer modified build later, keep or extract the newer repository and run `Install MarkItDown.command` again. It recreates the private environment and replaces the installed command.
-
-### Uninstall on macOS
-
-Double-click:
-
-```text
-Uninstall MarkItDown.command
-```
-
-or run:
-
-```bash
-./"Uninstall MarkItDown.command"
-```
-
-The uninstaller removes the private MarkItDown environment and the launcher created by this project. It does not uninstall Python 3.14 itself.
-
-### Manual developer installation
-
-Developers who want an editable source checkout can still use a project-local virtual environment:
-
-```bash
-python3.14 -m venv .venv
-source .venv/bin/activate
-python -m pip install --upgrade pip setuptools wheel
+git clone git@github.com:microsoft/markitdown.git
+cd markitdown
 pip install -e 'packages/markitdown[all]'
 ```
-
-An editable installation is linked to the source directory. If the repository is moved, recreate the virtual environment and reinstall the package from the new location.
 
 ## Usage
 
