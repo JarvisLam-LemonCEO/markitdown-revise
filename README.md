@@ -1,967 +1,401 @@
-# MarkItDown — Python 3.14 Compatibility Modification
+# MarkItDown
 
-This repository is a modified version of **MarkItDown** with updates intended to improve compatibility with **Python 3.14**.
+[![PyPI](https://img.shields.io/pypi/v/markitdown.svg)](https://pypi.org/project/markitdown/)
+![PyPI - Downloads](https://img.shields.io/pypi/dd/markitdown)
+[![Built by AutoGen Team](https://img.shields.io/badge/Built%20by-AutoGen%20Team-blue)](https://github.com/microsoft/autogen)
 
-It also includes updated installation guidance for running MarkItDown from any folder, using files stored in other locations, and fixing a virtual environment after moving the project directory.
+> [!IMPORTANT]
+> MarkItDown performs I/O with the privileges of the current process. Like open() or requests.get(), it will access resources that the process itself can access. Sanitize your inputs in untrusted environments, and call the narrowest `convert_*` function needed for your use case (e.g., `convert_stream()`, or `convert_local()`). See the [Security Considerations](#security-considerations) section of the documentation for more information.
 
----
+MarkItDown is a lightweight Python utility for converting various files to Markdown for use with LLMs and related text analysis pipelines. To this end, it is most comparable to [textract](https://github.com/deanmalmgren/textract), but with a focus on preserving important document structure and content as Markdown (including: headings, lists, tables, links, etc.) While the output is often reasonably presentable and human-friendly, it is meant to be consumed by text analysis tools -- and may not be the best option for high-fidelity document conversions for human consumption.
 
-## What Was Modified
+MarkItDown currently supports the conversion from:
 
-### Python 3.14 support
+- PDF
+- PowerPoint
+- Word
+- Excel
+- Images (EXIF metadata and OCR)
+- Audio (EXIF metadata and speech transcription)
+- HTML
+- Text-based formats (CSV, JSON, XML)
+- ZIP files (iterates over contents)
+- YouTube URLs
+- EPubs
+- ... and more!
 
-Python 3.14 was added to the supported/tested Python versions.
+## Why Markdown?
 
-Supported versions include:
+Markdown is extremely close to plain text, with minimal markup or formatting, but still
+provides a way to represent important document structure. Mainstream LLMs, such as
+OpenAI's GPT-4o, natively "_speak_" Markdown, and often incorporate Markdown into their
+responses unprompted. This suggests that they have been trained on vast amounts of
+Markdown-formatted text, and understand it well. As a side benefit, Markdown conventions
+are also highly token-efficient.
 
-```text
-Python 3.10
-Python 3.11
-Python 3.12
-Python 3.13
-Python 3.14
-```
+## Prerequisites
 
-Python 3.14 is the primary target of this modified version.
+This modified build targets Python 3.14. On macOS, the included installer manages the Python virtual environment automatically, so users do **not** need to create, activate, move, or maintain `.venv` themselves.
 
----
+## Installation
 
-## Dependency Updates
+### Recommended macOS installation — automatic global command
 
-### Magika
+For normal use on macOS, use the included installer instead of creating a virtual environment manually.
 
-Original:
+1. Extract or clone this repository.
+2. In Finder, double-click **`Install MarkItDown.command`**.
 
-```text
-magika~=0.6.1
-```
-
-Updated:
-
-```text
-magika>=1.0.2,<2
-```
-
-### youtube-transcript-api
-
-Original:
-
-```text
-youtube-transcript-api~=1.0.0
-```
-
-Updated:
-
-```text
-youtube-transcript-api>=1.2.3,<2
-```
-
-These dependency changes are intended to avoid Python 3.14 compatibility problems found with older releases.
-
----
-
-## Docker Changes
-
-Relevant Docker configuration was updated to use Python 3.14.
-
-Example base image:
-
-```dockerfile
-python:3.14-slim-bookworm
-```
-
-The MCP Docker installation path was also adjusted so that it installs the modified local MarkItDown source rather than unintentionally using an older package version.
-
----
-
-## CI / GitHub Actions
-
-The Python test matrix includes:
-
-```text
-3.10
-3.11
-3.12
-3.13
-3.14
-```
-
----
-
-# Installation
-
-## Requirements
-
-You need:
-
-- Python 3.14
-- pip
-- Git if cloning the repository
-- A virtual environment is recommended for development
-
-Check Python:
+Or run it from Terminal:
 
 ```bash
-python3.14 --version
+./"Install MarkItDown.command"
 ```
 
-Expected:
+The installer automatically:
 
-```text
-Python 3.14.x
-```
+- finds Python 3.14;
+- installs Python 3.14 with Homebrew if Python 3.14 is missing and Homebrew is available;
+- creates a private environment at `~/.local/share/markitdown-python314/venv`;
+- installs this modified local MarkItDown package with all optional converters;
+- creates a global `markitdown` launcher in a writable directory already on `PATH` when possible;
+- otherwise creates `~/.local/bin/markitdown` and configures zsh to include it on `PATH`;
+- runs `markitdown --help` as a self-test.
 
----
+No manual `source .venv/bin/activate` step is required.
 
-# macOS / Linux Installation
-
-Go to the MarkItDown project folder.
-
-Example:
+After installation, open a new Terminal window if the installer says the PATH was newly configured. Then use MarkItDown from any directory:
 
 ```bash
-cd ~/Projects/markitdown-python314
+markitdown ~/Downloads/file.pdf -o ~/Downloads/read.md
 ```
 
-Create a Python 3.14 virtual environment:
+The PDF, the output file, and the MarkItDown source repository can all be in different folders.
+
+### Moving or deleting the source folder after installation
+
+The automatic installer performs a normal package installation rather than an editable `pip install -e` installation. Therefore the installed `markitdown` command does not point back to the original repository folder.
+
+You can move the repository after installation without breaking the global command. You can also delete the extracted source folder after installation if you do not need it for development.
+
+To install a newer modified build later, keep or extract the newer repository and run `Install MarkItDown.command` again. It recreates the private environment and replaces the installed command.
+
+### Uninstall on macOS
+
+Double-click:
+
+```text
+Uninstall MarkItDown.command
+```
+
+or run:
+
+```bash
+./"Uninstall MarkItDown.command"
+```
+
+The uninstaller removes the private MarkItDown environment and the launcher created by this project. It does not uninstall Python 3.14 itself.
+
+### Manual developer installation
+
+Developers who want an editable source checkout can still use a project-local virtual environment:
 
 ```bash
 python3.14 -m venv .venv
-```
-
-Activate it:
-
-```bash
-source .venv/bin/activate
-```
-
-Upgrade packaging tools:
-
-```bash
-python -m pip install --upgrade pip setuptools wheel
-```
-
-Install MarkItDown with all optional features:
-
-```bash
-pip install -e "./packages/markitdown[all]"
-```
-
-Test:
-
-```bash
-markitdown --help
-```
-
-If the help menu appears, MarkItDown is installed correctly.
-
----
-
-# Windows Installation
-
-Open PowerShell inside the project directory.
-
-Example:
-
-```powershell
-cd C:\Users\YOURNAME\Projects\markitdown-python314
-```
-
-Check Python:
-
-```powershell
-py -3.14 --version
-```
-
-Create a virtual environment:
-
-```powershell
-py -3.14 -m venv .venv
-```
-
-Activate it:
-
-```powershell
-.\.venv\Scripts\Activate.ps1
-```
-
-Upgrade packaging tools:
-
-```powershell
-python -m pip install --upgrade pip setuptools wheel
-```
-
-Install MarkItDown:
-
-```powershell
-pip install -e ".\packages\markitdown[all]"
-```
-
-Test:
-
-```powershell
-markitdown --help
-```
-
----
-
-# Important: Moving the MarkItDown Folder
-
-If you installed MarkItDown with:
-
-```bash
-pip install -e "./packages/markitdown[all]"
-```
-
-then it is installed in **editable mode**.
-
-A Python virtual environment also stores paths related to the location where it was created.
-
-If you create `.venv` while the project is in:
-
-```text
-~/Downloads/markitdown-python314
-```
-
-and later move the project to:
-
-```text
-~/Projects/markitdown-python314
-```
-
-the old virtual environment may no longer work correctly.
-
-You may see:
-
-```text
-(.venv) user@Mac ~ % markitdown --help
-
-zsh: command not found: markitdown
-```
-
-Even though `(.venv)` appears in the Terminal prompt, the environment can still be broken because the project was moved.
-
----
-
-# Fix After Moving the Project
-
-## macOS / Linux
-
-### 1. Exit the old environment
-
-```bash
-deactivate
-```
-
-### 2. Go to the new project location
-
-Example:
-
-```bash
-cd ~/Projects/markitdown-python314
-```
-
-Use the actual folder where you moved the project.
-
-### 3. Delete the old virtual environment
-
-```bash
-rm -rf .venv
-```
-
-### 4. Create a new Python 3.14 environment
-
-```bash
-python3.14 -m venv .venv
-```
-
-### 5. Activate it
-
-```bash
-source .venv/bin/activate
-```
-
-### 6. Upgrade pip and build tools
-
-```bash
-python -m pip install --upgrade pip setuptools wheel
-```
-
-### 7. Reinstall MarkItDown
-
-```bash
-pip install -e "./packages/markitdown[all]"
-```
-
-### 8. Test MarkItDown
-
-```bash
-markitdown --help
-```
-
-### 9. Confirm which executable is being used
-
-```bash
-which markitdown
-```
-
-Example:
-
-```text
-/Users/YOURNAME/Projects/markitdown-python314/.venv/bin/markitdown
-```
-
-If the path points to the new project location, the environment is fixed.
-
----
-
-# Quick Repair Commands After Moving the Project
-
-If your new project location is:
-
-```text
-~/Projects/markitdown-python314
-```
-
-you can run:
-
-```bash
-deactivate 2>/dev/null || true
-
-cd ~/Projects/markitdown-python314
-
-rm -rf .venv
-
-python3.14 -m venv .venv
-source .venv/bin/activate
-
-python -m pip install --upgrade pip setuptools wheel
-
-pip install -e "./packages/markitdown[all]"
-
-markitdown --help
-```
-
----
-
-# Using MarkItDown With Files in Other Folders
-
-MarkItDown and your PDF **do not need to be in the same directory**.
-
-Suppose:
-
-```text
-MarkItDown project:
-~/Projects/markitdown-python314
-
-PDF:
-~/Downloads/file.pdf
-```
-
-You can run:
-
-```bash
-markitdown ~/Downloads/file.pdf -o ~/Downloads/read.md
-```
-
-This converts:
-
-```text
-~/Downloads/file.pdf
-```
-
-to:
-
-```text
-~/Downloads/read.md
-```
-
-The current Terminal directory does not need to contain the PDF.
-
----
-
-# Why `markitdown file.pdf` Sometimes Fails
-
-If you run:
-
-```bash
-markitdown file.pdf -o read.md
-```
-
-the shell looks for:
-
-```text
-file.pdf
-```
-
-inside your **current Terminal directory**.
-
-For example, if your prompt shows:
-
-```text
-user@Mac ~ %
-```
-
-your current directory is normally:
-
-```text
-~
-```
-
-If the PDF is actually in Downloads, this command:
-
-```bash
-markitdown file.pdf -o read.md
-```
-
-will not find it.
-
-Use:
-
-```bash
-markitdown ~/Downloads/file.pdf -o ~/Downloads/read.md
-```
-
-instead.
-
----
-
-# Files With Spaces in Their Names
-
-Use quotes around paths containing spaces.
-
-Example:
-
-```bash
-markitdown "$HOME/Downloads/My File.pdf" -o "$HOME/Downloads/My File.md"
-```
-
-You can also use a complete absolute path:
-
-```bash
-markitdown "/Users/YOURNAME/Downloads/My File.pdf" -o "/Users/YOURNAME/Downloads/My File.md"
-```
-
----
-
-# Save the Output Somewhere Else
-
-Input in Downloads:
-
-```text
-~/Downloads/file.pdf
-```
-
-Output in Documents:
-
-```bash
-markitdown ~/Downloads/file.pdf -o ~/Documents/read.md
-```
-
-Input and output locations can be completely different.
-
----
-
-# Use MarkItDown From Any Directory
-
-After activating the correct virtual environment:
-
-```bash
-cd ~/Projects/markitdown-python314
-source .venv/bin/activate
-```
-
-you can change to another directory:
-
-```bash
-cd ~
-```
-
-and MarkItDown should still work:
-
-```bash
-markitdown --help
-```
-
-Then convert a PDF in Downloads:
-
-```bash
-markitdown ~/Downloads/file.pdf -o ~/Downloads/read.md
-```
-
-The important part is that the correct `.venv` must still be active.
-
----
-
-# Opening a New Terminal Window
-
-When using the project virtual environment, every new Terminal session normally requires activation again.
-
-Run:
-
-```bash
-cd ~/Projects/markitdown-python314
-source .venv/bin/activate
-```
-
-Then:
-
-```bash
-markitdown --help
-```
-
-After activation, you can move to any folder:
-
-```bash
-cd ~
-```
-
-and continue using:
-
-```bash
-markitdown ~/Downloads/file.pdf -o ~/Downloads/read.md
-```
-
----
-
-# Recommended Permanent Command-Line Installation
-
-If you use MarkItDown regularly and do not want to activate `.venv` every time, install the modified project as a command-line tool using `uv`.
-
-This is generally more convenient for normal daily use.
-
-## Install `uv`
-
-If `uv` is already installed, skip this section.
-
-Check:
-
-```bash
-uv --version
-```
-
-If the command exists, continue below.
-
----
-
-## Install the Modified MarkItDown With `uv`
-
-Go to the project:
-
-```bash
-cd ~/Projects/markitdown-python314
-```
-
-Install the local modified package using Python 3.14:
-
-```bash
-uv tool install --python 3.14 "./packages/markitdown[all]"
-```
-
-Then update your shell PATH if necessary:
-
-```bash
-uv tool update-shell
-```
-
-Close and reopen Terminal.
-
-Test:
-
-```bash
-markitdown --help
-```
-
-Now you should normally be able to use MarkItDown without activating the project `.venv`.
-
-Example:
-
-```bash
-cd ~
-markitdown ~/Downloads/file.pdf -o ~/Downloads/read.md
-```
-
----
-
-# Development Installation vs Permanent Installation
-
-## Development / Editable Installation
-
-Use:
-
-```bash
-pip install -e "./packages/markitdown[all]"
-```
-
-Recommended when modifying MarkItDown source code.
-
-Advantages:
-
-- Changes to the source are available immediately.
-- Good for development and testing.
-
-Important:
-
-- The virtual environment must normally be activated.
-- Moving the repository can break the environment.
-- If you move the repository, recreate `.venv` and reinstall the package.
-
----
-
-## Permanent CLI Installation With `uv`
-
-Use:
-
-```bash
-uv tool install --python 3.14 "./packages/markitdown[all]"
-```
-
-Recommended for regular command-line use.
-
-Advantages:
-
-- `markitdown` can be used from different directories.
-- You do not normally need to activate the project's `.venv`.
-- Your PDFs can remain anywhere, such as Downloads.
-
----
-
-# Basic Usage
-
-Print converted Markdown to the Terminal:
-
-```bash
-markitdown file.pdf
-```
-
-Save the output:
-
-```bash
-markitdown file.pdf -o file.md
-```
-
-Convert a file from Downloads:
-
-```bash
-markitdown ~/Downloads/file.pdf -o ~/Downloads/file.md
-```
-
----
-
-# Recommended Folder Layout
-
-A clean setup could look like:
-
-```text
-~/Projects/
-└── markitdown-python314/
-    ├── packages/
-    ├── README.md
-    └── .venv/
-
-~/Downloads/
-├── document.pdf
-└── document.md
-```
-
-Then run:
-
-```bash
-markitdown ~/Downloads/document.pdf -o ~/Downloads/document.md
-```
-
-The PDF does not need to be copied into the MarkItDown project directory.
-
----
-
-# Verify the Installation
-
-Check Python:
-
-```bash
-python --version
-```
-
-Expected while using the Python 3.14 environment:
-
-```text
-Python 3.14.x
-```
-
-Check MarkItDown:
-
-```bash
-markitdown --help
-```
-
-Find the executable:
-
-```bash
-which markitdown
-```
-
-For a project virtual environment, it may look like:
-
-```text
-/Users/YOURNAME/Projects/markitdown-python314/.venv/bin/markitdown
-```
-
----
-
-# Troubleshooting
-
-## `zsh: command not found: markitdown`
-
-If the project was moved after creating `.venv`, rebuild the environment.
-
-```bash
-deactivate
-cd ~/Projects/markitdown-python314
-rm -rf .venv
-python3.14 -m venv .venv
 source .venv/bin/activate
 python -m pip install --upgrade pip setuptools wheel
-pip install -e "./packages/markitdown[all]"
-markitdown --help
+pip install -e 'packages/markitdown[all]'
 ```
 
----
+An editable installation is linked to the source directory. If the repository is moved, recreate the virtual environment and reinstall the package from the new location.
 
-## Terminal shows `(.venv)` but MarkItDown is missing
+## Usage
 
-Example:
-
-```text
-(.venv) user@Mac ~ % markitdown --help
-zsh: command not found: markitdown
-```
-
-The virtual environment may have been created before the project was moved.
-
-Do not rely only on `(.venv)` appearing in the prompt.
-
-Check:
+### Command-Line
 
 ```bash
-which python
+markitdown path-to-file.pdf > document.md
 ```
 
-and:
+Or use `-o` to specify the output file:
 
 ```bash
-which markitdown
+markitdown path-to-file.pdf -o document.md
 ```
 
-If MarkItDown is missing or paths point to the old location, recreate `.venv`.
-
----
-
-## `file.pdf` cannot be found
-
-If the file is located in Downloads, use its path:
+You can also pipe content:
 
 ```bash
-markitdown ~/Downloads/file.pdf -o ~/Downloads/read.md
+cat path-to-file.pdf | markitdown
 ```
 
-Do not use only:
+### Optional Dependencies
+MarkItDown has optional dependencies for activating various file formats. Earlier in this document, we installed all optional dependencies with the `[all]` option. However, you can also install them individually for more control. For example:
 
 ```bash
-markitdown file.pdf -o read.md
+pip install 'markitdown[pdf, docx, pptx]'
 ```
 
-unless `file.pdf` is actually in your current working directory.
+will install only the dependencies for PDF, DOCX, and PPTX files.
 
----
+At the moment, the following optional dependencies are available:
 
-## Check the current directory
+* `[all]` Installs all optional dependencies
+* `[pptx]` Installs dependencies for PowerPoint files
+* `[docx]` Installs dependencies for Word files
+* `[xlsx]` Installs dependencies for Excel files
+* `[xls]` Installs dependencies for older Excel files
+* `[pdf]` Installs dependencies for PDF files
+* `[outlook]` Installs dependencies for Outlook messages
+* `[az-doc-intel]` Installs dependencies for Azure Document Intelligence
+* `[az-content-understanding]` Installs dependencies for Azure Content Understanding
+* `[audio-transcription]` Installs dependencies for audio transcription of wav and mp3 files
+* `[youtube-transcription]` Installs dependencies for fetching YouTube video transcription
 
-Run:
+### Plugins
+
+MarkItDown also supports 3rd-party plugins. Plugins are disabled by default. To list installed plugins:
 
 ```bash
-pwd
+markitdown --list-plugins
 ```
 
-Example:
-
-```text
-/Users/YOURNAME
-```
-
-List files:
+To enable plugins use:
 
 ```bash
-ls
+markitdown --use-plugins path-to-file.pdf
 ```
 
-Check Downloads:
+To find available plugins, search GitHub for the hashtag `#markitdown-plugin`. To develop a plugin, see `packages/markitdown-sample-plugin`.
+
+#### markitdown-ocr Plugin
+
+The `markitdown-ocr` plugin adds OCR support to PDF, DOCX, PPTX, and XLSX converters, extracting text from embedded images using LLM Vision — the same `llm_client` / `llm_model` pattern that MarkItDown already uses for image descriptions. No new ML libraries or binary dependencies required.
+
+**Installation:**
 
 ```bash
-ls ~/Downloads
+pip install markitdown-ocr
+pip install openai  # or any OpenAI-compatible client
 ```
 
----
+**Usage:**
 
-## Confirm MarkItDown Is Installed
+Pass the same `llm_client` and `llm_model` you would use for image descriptions:
 
-Inside the activated environment:
+```python
+from markitdown import MarkItDown
+from openai import OpenAI
+
+md = MarkItDown(
+    enable_plugins=True,
+    llm_client=OpenAI(),
+    llm_model="gpt-4o",
+)
+result = md.convert("document_with_images.pdf")
+print(result.text_content)
+```
+
+If no `llm_client` is provided the plugin still loads, but OCR is silently skipped and the standard built-in converter is used instead.
+
+See [`packages/markitdown-ocr/README.md`](packages/markitdown-ocr/README.md) for detailed documentation.
+
+### Azure Content Understanding
+
+[Azure Content Understanding](https://learn.microsoft.com/azure/ai-services/content-understanding/) provides higher-quality conversion with structured field extraction (YAML front matter), multi-modal support (documents, images, audio, video), and configurable analyzers.
+
+Install: `pip install 'markitdown[az-content-understanding]'`
+
+#### When to use Content Understanding
+
+Content Understanding is ideal when you need capabilities beyond what built-in or Document Intelligence converters provide:
+
+- **Audio and video files** — CU is the only option for video, and the higher-quality cloud option for audio. Built-in converters have no video support and only basic audio transcription.
+- **Structured field extraction** — [Prebuilt](https://learn.microsoft.com/azure/ai-services/content-understanding/concepts/prebuilt-analyzers) or [custom-built](https://learn.microsoft.com/azure/ai-services/content-understanding/how-to/customize-analyzer-content-understanding-studio?tabs=portal) analyzers extract domain-specific fields (invoice amounts, receipt dates, contract clauses) serialized as YAML front matter. Neither built-in nor Doc Intel integration exposes fields.
+- **Higher-quality document extraction** — Cloud-based layout analysis and OCR for scanned PDFs, complex tables, and multi-page documents.
+- **Single API for all modalities** — One `cu_endpoint` handles documents, images, audio, and video with automatic analyzer routing.
+
+| Capability | Built-in converters | Azure Document Intelligence | Azure Content Understanding |
+|------------|---------------------|-----------------------------|-----------------------------|
+| Document conversion | Offline, format-specific extraction | Cloud layout extraction | Cloud multimodal extraction |
+| Structured fields | Not available | Not exposed by this integration | YAML front matter from analyzer fields |
+| Custom analyzers | Not available | Not configurable in this integration | Supported with `cu_analyzer_id` |
+| Audio and video | Basic audio, no video | Not supported | Audio and video analyzers |
+| Cost | Local compute only | Billable Azure API calls | Billable Azure API calls |
+
+**CLI:**
 
 ```bash
-pip show markitdown
+markitdown path-to-file.pdf --use-cu --cu-endpoint "<content_understanding_endpoint>"
 ```
 
-Or:
+**Python API:**
+
+```python
+from markitdown import MarkItDown
+
+# Zero-config — auto-selects analyzer per file type
+md = MarkItDown(cu_endpoint="<content_understanding_endpoint>")
+result = md.convert("report.pdf")   # documents → prebuilt-documentSearch
+result = md.convert("meeting.mp4")  # video → prebuilt-videoSearch
+result = md.convert("call.wav")     # audio → prebuilt-audioSearch
+print(result.markdown)
+```
+
+**With a custom analyzer** (for domain-specific field extraction):
+
+```python
+md = MarkItDown(
+    cu_endpoint="<content_understanding_endpoint>",
+    cu_analyzer_id="my-invoice-analyzer",
+)
+result = md.convert("invoice.pdf")
+print(result.markdown)
+# Output includes YAML front matter with extracted fields:
+# ---
+# contentType: document
+# fields:
+#   VendorName: CONTOSO LTD.
+#   InvoiceDate: '2019-11-15'
+# ---
+# <!-- page 1 -->
+# ...
+```
+
+When `cu_analyzer_id` is set, the converter automatically scopes it to compatible file types based on the analyzer's modality. Incompatible types (e.g., audio files with a document analyzer) auto-route to default prebuilt analyzers.
+
+**Cost note:** Each `convert()` call for a CU-routed format is a billable Azure API call. Use `cu_file_types` to restrict which formats route to CU:
+
+```python
+from markitdown.converters import ContentUnderstandingFileType
+
+md = MarkItDown(
+    cu_endpoint="<content_understanding_endpoint>",
+    cu_file_types=[ContentUnderstandingFileType.PDF],  # only PDFs use CU
+)
+```
+
+More information about Azure Content Understanding can be found [here](https://learn.microsoft.com/azure/ai-services/content-understanding/).
+
+### Azure Document Intelligence
+
+To use Microsoft Document Intelligence for conversion:
 
 ```bash
-pip list | grep markitdown
+markitdown path-to-file.pdf -o document.md -d -e "<document_intelligence_endpoint>"
 ```
 
----
+More information about how to set up an Azure Document Intelligence Resource can be found [here](https://learn.microsoft.com/en-us/azure/ai-services/document-intelligence/how-to-guides/create-document-intelligence-resource?view=doc-intel-4.0.0)
 
-# macOS Recommended Setup
+### Python API
 
-For development:
+Basic usage in Python:
 
-```bash
-cd ~/Projects/markitdown-python314
+```python
+from markitdown import MarkItDown
 
-python3.14 -m venv .venv
-source .venv/bin/activate
-
-python -m pip install --upgrade pip setuptools wheel
-
-pip install -e "./packages/markitdown[all]"
-
-markitdown --help
+md = MarkItDown(enable_plugins=False) # Set to True to enable plugins
+result = md.convert("test.xlsx")
+print(result.text_content)
 ```
 
-For regular daily use, consider:
+Document Intelligence conversion in Python:
 
-```bash
-cd ~/Projects/markitdown-python314
+```python
+from markitdown import MarkItDown
 
-uv tool install --python 3.14 "./packages/markitdown[all]"
-
-uv tool update-shell
+md = MarkItDown(docintel_endpoint="<document_intelligence_endpoint>")
+result = md.convert("test.pdf")
+print(result.text_content)
 ```
 
-Then reopen Terminal and test:
+To use Large Language Models for image descriptions (currently only for pptx and image files), provide `llm_client` and `llm_model`:
 
-```bash
-markitdown --help
+```python
+from markitdown import MarkItDown
+from openai import OpenAI
+
+client = OpenAI()
+md = MarkItDown(llm_client=client, llm_model="gpt-4o", llm_prompt="optional custom prompt")
+result = md.convert("example.jpg")
+print(result.text_content)
 ```
 
----
+### Docker
 
-# Example Workflow
-
-Project:
-
-```text
-~/Projects/markitdown-python314
+```sh
+docker build -t markitdown:latest .
+docker run --rm -i markitdown:latest < ~/your-file.pdf > output.md
 ```
 
-Input:
+## Contributing
 
-```text
-~/Downloads/file.pdf
-```
+This project welcomes contributions and suggestions. Most contributions require you to agree to a
+Contributor License Agreement (CLA) declaring that you have the right to, and actually do, grant us
+the rights to use your contribution. For details, visit https://cla.opensource.microsoft.com.
 
-Output:
+When you submit a pull request, a CLA bot will automatically determine whether you need to provide
+a CLA and decorate the PR appropriately (e.g., status check, comment). Simply follow the instructions
+provided by the bot. You will only need to do this once across all repos using our CLA.
 
-```text
-~/Downloads/read.md
-```
+This project has adopted the [Microsoft Open Source Code of Conduct](https://opensource.microsoft.com/codeofconduct/).
+For more information see the [Code of Conduct FAQ](https://opensource.microsoft.com/codeofconduct/faq/) or
+contact [opencode@microsoft.com](mailto:opencode@microsoft.com) with any additional questions or comments.
 
-With the virtual environment:
+### How to Contribute
 
-```bash
-cd ~/Projects/markitdown-python314
-source .venv/bin/activate
+You can help by looking at issues or helping review PRs. Any issue or PR is welcome, but we have also marked some as 'open for contribution' and 'open for reviewing' to help facilitate community contributions. These are of course just suggestions and you are welcome to contribute in any way you like.
 
-markitdown ~/Downloads/file.pdf -o ~/Downloads/read.md
-```
+<div align="center">
 
-Or, after installing through `uv tool`:
+|            | All                                                          | Especially Needs Help from Community                                                                                                      |
+| ---------- | ------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------- |
+| **Issues** | [All Issues](https://github.com/microsoft/markitdown/issues) | [Issues open for contribution](https://github.com/microsoft/markitdown/issues?q=is%3Aissue+is%3Aopen+label%3A%22open+for+contribution%22) |
+| **PRs**    | [All PRs](https://github.com/microsoft/markitdown/pulls)     | [PRs open for reviewing](https://github.com/microsoft/markitdown/pulls?q=is%3Apr+is%3Aopen+label%3A%22open+for+reviewing%22)              |
 
-```bash
-markitdown ~/Downloads/file.pdf -o ~/Downloads/read.md
-```
+</div>
 
----
+### Running Tests and Checks
 
----
+- Navigate to the MarkItDown package:
 
-# Credits and Attribution
+  ```sh
+  cd packages/markitdown
+  ```
 
-This project is based on **MarkItDown**, the open-source project developed by **Microsoft Corporation**.
+- Install `hatch` in your environment and run tests:
 
-Original project:
+  ```sh
+  pip install hatch  # Other ways of installing hatch: https://hatch.pypa.io/dev/install/
+  hatch shell
+  hatch test
+  ```
 
-**Microsoft MarkItDown**  
-https://github.com/microsoft/markitdown
+  (Alternative) Use the Devcontainer which has all the dependencies installed:
 
-The original MarkItDown project is licensed under the **MIT License**.
+  ```sh
+  # Reopen the project in Devcontainer and run:
+  hatch test
+  ```
 
-This repository contains modifications intended to improve compatibility with **Python 3.14**, including dependency updates, Docker configuration changes, CI updates, installation guidance, and virtual-environment troubleshooting.
+- Run pre-commit checks before submitting a PR: `pre-commit run --all-files`
 
-These modifications are independently maintained and are **not an official Microsoft release**. Microsoft does not endorse or maintain this modified version unless otherwise stated by Microsoft.
+### Security Considerations
 
-## License
+MarkItDown performs I/O with the privileges of the current process. Like `open()` or `requests.get()`, it will access resources that the process itself can access.
 
-The original Microsoft copyright notice and MIT License should be retained in accordance with the terms of the MIT License.
+**Sanitize your inputs:** Do not pass untrusted input directly to MarkItDown. If any part of the input may be controlled by an untrusted user or system, such as in hosted or server-side applications, it must be validated and restricted before calling MarkItDown. Depending on your environment, this may include restricting file paths, limiting URI schemes and network destinations, and blocking access to private, loopback, link-local, or metadata-service addresses.
 
-Copyright (c) Microsoft Corporation.
+**Call only the conversion method you need:** Prefer the narrowest conversion API that fits your use case. MarkItDown's `convert()` method is intentionally permissive and can handle local files, remote URIs, and byte streams. If your application only needs to read local files, call `convert_local()` instead. If you need more control over URI fetching, call `requests.get()` yourself and pass the response object to `convert_response()`. For maximum control, open a stream to the input you want converted and call `convert_stream()`.
 
-See the project's `LICENSE` file for the complete license text.
+### Contributing 3rd-party Plugins
 
-When redistributing this modified version, keep the original `LICENSE` file and copyright notice with the project.
+You can also contribute by creating and sharing 3rd party plugins. See `packages/markitdown-sample-plugin` for more details.
 
+## Trademarks
 
-# Summary
-
-This modified MarkItDown version includes:
-
-- Python 3.14 compatibility updates
-- Updated Magika dependency
-- Updated youtube-transcript-api dependency
-- Python 3.14 Docker configuration
-- Python 3.14 CI testing
-- Updated local package installation behavior
-- Instructions for files stored outside the project directory
-- Instructions for fixing `.venv` after moving the project
-- A recommended `uv tool` installation for convenient command-line use
-
-## Most Important Commands
-
-If you moved the project and MarkItDown stopped working:
-
-```bash
-deactivate
-cd ~/Projects/markitdown-python314
-rm -rf .venv
-python3.14 -m venv .venv
-source .venv/bin/activate
-python -m pip install --upgrade pip setuptools wheel
-pip install -e "./packages/markitdown[all]"
-markitdown --help
-```
-
-To convert a PDF stored in Downloads:
-
-```bash
-markitdown ~/Downloads/file.pdf -o ~/Downloads/read.md
-```
-
-For a convenient permanent command:
-
-```bash
-uv tool install --python 3.14 "./packages/markitdown[all]"
-uv tool update-shell
-```
-
-Then:
-
-```bash
-markitdown ~/Downloads/file.pdf -o ~/Downloads/read.md
-```
+This project may contain trademarks or logos for projects, products, or services. Authorized use of Microsoft
+trademarks or logos is subject to and must follow
+[Microsoft's Trademark & Brand Guidelines](https://www.microsoft.com/en-us/legal/intellectualproperty/trademarks/usage/general).
+Use of Microsoft trademarks or logos in modified versions of this project must not cause confusion or imply Microsoft sponsorship.
+Any use of third-party trademarks or logos are subject to those third-party's policies.
