@@ -1,4 +1,4 @@
-# MarkItDown for Python 3.14
+# MarkItDown for Python 3.14 (with macOS/Windows installer automatically)
 
 A Python 3.14-compatible modification of [Microsoft MarkItDown](https://github.com/microsoft/markitdown), with simplified **macOS and Windows installers** that make the `markitdown` command available from any directory without requiring users to manually create or activate a virtual environment.
 
