@@ -326,54 +326,53 @@ That means after installation you can move or delete the extracted source direct
 ---
 
 # Using MarkItDown
-
-# Supported file format
-## PDF
+## Supported file format
+### PDF
 markitdown document.pdf -o document.md
 
-## PowerPoint
+### PowerPoint
 markitdown presentation.pptx -o presentation.md
 
-## Word
+### Word
 markitdown document.docx -o document.md
 
-## Excel (.xlsx)
+### Excel (.xlsx)
 markitdown workbook.xlsx -o workbook.md
 
-## Older Excel (.xls)
+### Older Excel (.xls)
 markitdown workbook.xls -o workbook.md
 
-## Image
+### Image
 markitdown image.jpg -o image.md
 
-## PNG image
+### PNG image
 markitdown image.png -o image.md
 
-## Audio - MP3
+### Audio - MP3
 markitdown audio.mp3 -o audio.md
 
-## Audio - WAV
+### Audio - WAV
 markitdown audio.wav -o audio.md
 
-## HTML
+### HTML
 markitdown page.html -o page.md
 
-## CSV
+### CSV
 markitdown data.csv -o data.md
 
-## JSON
+### JSON
 markitdown data.json -o data.md
 
-## XML
+### XML
 markitdown data.xml -o data.md
 
-## ZIP
+### ZIP
 markitdown archive.zip -o archive.md
 
-## YouTube
+### YouTube
 markitdown "https://www.youtube.com/watch?v=VIDEO_ID" -o video.md
 
-## EPUB
+### EPUB
 markitdown book.epub -o book.md
 
 ## Convert a PDF in the current folder
